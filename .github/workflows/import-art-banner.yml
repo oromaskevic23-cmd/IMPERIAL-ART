@@ -1,0 +1,34 @@
+name: Install approved IMPERIAL ART banner
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/import-art-banner.yml']
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Download verified original artwork
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          curl --fail --silent --show-error --location --retry 2 --max-time 60 'https://d2ol7oe51mr4n9.cloudfront.net/user_3IVOKXTwsRFSR1qLtI96nF4edlB/59afb702-552d-47fa-90bf-46f04374fea0.jpg' -o assets/imperial-art-storm-ship.jpg
+          echo '23105a094876f3f4216cdf32200f7c5f6e4bd9f421999acd28533301bbe93ed3  assets/imperial-art-storm-ship.jpg' | sha256sum --check
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('README.md')
+          original = p.read_text(encoding='utf-8')
+          banner = '<p align="center"><img src="assets/imperial-art-storm-ship.jpg" alt="IMPERIAL ART — Renaissance-inspired ship in a storm" width="100%" /></p>\n\n'
+          if banner not in original:
+              p.write_text(banner + original, encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/imperial-art-storm-ship.jpg README.md
+          git commit -m 'art: install original storm ship banner with verified integrity'
+          git push
